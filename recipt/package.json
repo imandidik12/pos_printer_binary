@@ -6,11 +6,11 @@
     "@node-escpos/core": "^0.4.0",
     "@node-escpos/usb-adapter": "latest"
   },
-  "type": "module",
+  "type": "commonjs",
   "scripts": {
     "build-ts": "tsc",
     "build-pkg": "yarn build-ts && pkg .",
-    "dev": "ts-node-dev app.ts"
+    "dev": "ts-node-dev app.ts bytes=[27,100,1]"
   },
   "devDependencies": {
     "@types/node": "^20.2.5",
@@ -28,7 +28,7 @@
       "node_modules/usb"
     ],
     "targets": [
-      "node18-win"
+      "node18"
     ]
   }
 }

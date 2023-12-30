@@ -1,65 +1,64 @@
-import { Printer } from "@node-escpos/core";
 // install escpos-usb adapter module manually
-import USB from "@node-escpos/usb-adapter";
 
-import {Socket} from "socket.io";
+const { Printer } = require("@node-escpos/core");
+const USB = require("@node-escpos/usb-adapter");
+const { readFileSync } = require("fs");
+const { join } = require("path");
 
-function run(data){
+async function run(data) {
   const device = new USB();
-  try {
-    device.open((error)=>{
-      if (error){
-        console.log(error)
-        return error;
-        // throw error;
+  return new Promise((resolve, reject) => {
+    device.open((error) => {
+      if (error) {
+        console.log(error);
+        reject(error);
       }
       const adapter = device.open();
       const printer = new Printer(adapter, {});
-      return printer.raw(Buffer.from(data['bytes']))
-        .cut()
-        .close().then(()=>{
-        console.log("recipt should be printed");
+      printer
+        .raw(Buffer.from(data["bytes"]))
+
+        .cut();
+      return printer.close().then(() => {
+        return resolve({});
       });
+      // console.log(adapter.detachDevice());
+      // return resolve({});
+      // .close()
+      // .then(resolve)
+      // .catch(reject);
     });
-  }catch (e){
-    console.log("--error--");
+  });
+}
+
+const findJsonArg = (): string | null => {
+  const file = "./data.json";
+  try {
+    const data = readFileSync(file, "utf8");
+    return JSON.parse(data);
+  } catch (e) {
     console.log(e);
+    return null;
   }
-}
+};
 
-function receipt(incoming: Socket, data){
-  if(! USB.findPrinter().length){
-    console.log("No printer:");
-    return;
-  }
-  run(data)
-  return;
-}
-
-
-const findJsonArg = ( ) : string | null => {
-  const arg = process.argv;
-  const check = arg.find(el=>el.split("=")[0] == "bytes")
-  if(check){
-    return check.split("=")[1]
-  }
-  return null
-}
-
-const init = () => {
+const init = async () => {
   try {
     const arg = findJsonArg();
-    if (! arg) {
+    if (!arg) {
       console.log("bytes argument not found");
       return null;
     }
-    const bytes = JSON.parse(arg);
-    const arrBytes = Int8Array.from(bytes);
-    run({bytes : arrBytes});
-  }catch (e){
+    const bytes = arg;
+    const arrBytes = Int8Array.from(bytes as any);
+    return run({ bytes: arrBytes }).then(() => {});
+  } catch (e) {
     console.log(e);
   }
-}
-init();
-// run({bytes});
-export default receipt;
+};
+
+console.log();
+init().then(() => {
+  console.log("oke");
+});
+export {};
